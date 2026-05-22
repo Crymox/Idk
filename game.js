@@ -711,7 +711,7 @@ function wardenExecute(execute) {
 
 
 /* VOTING & DAY PHASE */
-function setupVoting()){
+function setupVoting() {
     gameState.votes = { skip:0 };
     players.forEach(p => { if(p.alive && p.role.id !== "skeleton") gameState.votes[p.id] = 0; });
     gameState.votingTurnIndex = 0;
