@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json?v=7">
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Midnight Werewolf</title>
+    <!-- External Stylesheet Links Here -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- OVERLAYS -->
+<div class="overlay" id="role-info-overlay" onclick="closePopup('role-info-overlay')">
+    <div class="popup" onclick="event.stopPropagation()">
+        <h2 id="popup-role-name">Role</h2>
+        <p id="popup-role-desc">Desc</p>
+        <button onclick="closePopup('role-info-overlay')" class="t-close">Close</button>
+    </div>
+</div>
+<div class="overlay" id="custom-alert-overlay" style="z-index:200;">
+    <div class="popup">
+        <h3 id="custom-alert-title" style="color:var(--warning-color);">Alert</h3>
+        <p id="custom-alert-msg" style="margin-bottom:20px;"></p>
+        <button onclick="closePopup('custom-alert-overlay')" class="t-ack">Acknowledge</button>
+    </div>
+</div>
+<div class="overlay" id="player-options-overlay">
+    <div class="popup">
+        <h3 class="t-manage">Manage Player</h3>
+        <input type="text" id="edit-player-name" placeholder="Player Name">
+        <button style="width:95%;" onclick="savePlayerToLibrary()" class="t-bookmark">Bookmark</button>
+        <button style="width:95%; background-color:var(--danger-color);" onclick="deleteActivePlayer()" class="t-delete">Delete</button>
+        <hr style="border-color:var(--border-color); margin:15px 0;">
+        <button style="width:45%;" onclick="submitPlayerRename()" class="t-save">Save</button>
+        <button style="width:45%; background-color:transparent;" onclick="closePopup('player-options-overlay')" class="t-cancel">Cancel</button>
+    </div>
+</div>
+<div class="overlay" id="error-overlay">
+    <div class="popup">
+        <h3 id="error-title">Error</h3>
+        <p id="error-msg"></p>
+        <button onclick="closePopup('error-overlay')" class="t-close">Close</button>
+    </div>
+</div>
+<!-- GER UNO REVERSE OVERLAY -->
+<div class="overlay" id="ger-overlay">
+    <div class="popup" style="max-width: 380px;">
+        <h3 style="color:var(--purple-color);">GER: Uno Reverse 🔄</h3>
+        <p class="t-ger-desc">You are about to be executed! Pick someone else to take your place.</p>
+        <div id="ger-targets" style="max-height: 250px; overflow-y: auto;"></div>
+        <button onclick="confirmGerReverse()" style="background-color:var(--purple-color); width:95%; margin-top:15px;" id="ger-confirm-btn" disabled>Reverse Fate</button>
+    </div>
+</div>
+
+<!-- SCREENS -->
+<div class="screen active" id="screen-menu">
+    <h1 style="font-size:36px; margin-top:25%;">🐺 Wolvesville</h1>
+    <p style="opacity:0.6;">v2.1 - Midnight Update</p>
+    <button style="margin-top:40px; padding:15px 50px;" onclick="attemptOpenPlayers()" class="t-play">Play</button>
+    <button onclick="nav('screen-shame')" class="t-pin">Pin of Shame</button>
+    <button onclick="nav('screen-global-settings')" style="background-color:transparent; font-size:14px; margin-top:20px;">⚙️ Settings & Language</button>
+</div>
+
+<div class="screen" id="screen-global-settings">
+    <div class="header-bar"><button class="back-btn" onclick="nav('screen-menu')">‹ Back</button></div>
+    <h2>Global Settings</h2>
+    <div class="setting-row" style="margin-top:20px;">
+        <span>Language</span>
+        <select id="lang-select" onchange="changeLanguage(this.value)" style="padding:5px; background:var(--bg-color); color:white; border-radius:5px;">
+            <option value="en">English</option>
+            <option value="id">Indonesian (Simple)</option>
+        </select>
+    </div>
+</div>
+
+<div class="screen" id="screen-shame">
+    <div class="header-bar"><button class="back-btn" onclick="nav('screen-menu')">‹ Back</button></div>
+    <h2 class="t-pin">Pin of Shame</h2>
+    <div style="margin-top:25px; text-align:center; line-height:2.1; font-size:20px;">
+        Delta<br>Sahril<br>Yanto<br>Nuki<br>Novi<br>Julius<br>Sahril V2
+    </div>
+</div>
+
+<div class="screen" id="screen-players">
+    <div class="header-bar">
+        <button class="back-btn" onclick="nav('screen-menu')">‹ Back</button>
+        <button class="back-btn" onclick="nav('screen-library'); renderLibraryScreen();">Library ★</button>
+    </div>
+    <h2 class="t-active-players">Active Players</h2>
+    <div id="players-list" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1;"></div>
+    <button onclick="createNewPlayerDirectly()" class="t-add-player">+ Add New Player</button>
+    <button onclick="goToRolesScreen()" style="margin-top:15px; margin-bottom:20px;" class="t-next">Next ›</button>
+</div>
+
+<div class="screen" id="screen-library">
+    <div class="header-bar"><button class="back-btn" onclick="nav('screen-players'); renderPlayers();">‹ Roster</button></div>
+    <h2>Library</h2>
+    <div id="library-list" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1;"></div>
+    <button onclick="addBlankLibraryPlayer()" style="margin-bottom:20px;" class="t-add-saved">+ Create Saved Profile</button>
+</div>
+
+<div class="screen" id="screen-roles">
+    <div class="header-bar">
+        <button class="back-btn" onclick="nav('screen-players')">‹ Back</button>
+        <span style="font-size:14px;">Setup: <span id="role-count">0</span>/<span id="player-count">0</span></span>
+    </div>
+    <h2 class="t-config-roles">Configure Roles</h2>
+    <button onclick="randomizeRolesFairly()" style="background-color:var(--warning-color); color:#000; border-color:#000;" class="t-rand">🎲 Randomize</button>
+    <div id="roles-list" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1; padding-bottom:90px; margin-top:10px;"></div>
+    <button class="fixed-bottom-btn t-game-settings" id="to-settings-btn" onclick="nav('screen-settings')" disabled>Game Settings ›</button>
+</div>
+
+<div class="screen" id="screen-settings">
+    <div class="header-bar"><button class="back-btn" onclick="nav('screen-roles')">‹ Roles</button></div>
+    <h2 class="t-match-set">Match Settings</h2>
+    <div style="width:100%; display:flex; flex-direction:column; align-items:center; flex-grow:1;">
+        <div class="setting-row"><span class="t-set-reveal">Reveal Roles on Death</span><label class="switch"><input type="checkbox" id="set-reveal-death" checked><span class="slider"></span></label></div>
+        <div class="setting-row"><span class="t-set-timer">Hide Timer Counts</span><label class="switch"><input type="checkbox" id="set-hide-timer"><span class="slider"></span></label></div>
+        <div class="setting-row"><span class="t-set-n1">No Kills First Night</span><label class="switch"><input type="checkbox" id="set-no-kill-night-1"><span class="slider"></span></label></div>
+        <div class="setting-row"><span class="t-set-votes">Hide Vote Accumulation</span><label class="switch"><input type="checkbox" id="set-hide-votes"><span class="slider"></span></label></div>
+    </div>
+    <button class="fixed-bottom-btn t-start" onclick="startGame()" style="background-color:var(--success-color);">Start Match</button>
+</div>
+
+<div class="screen" id="screen-night-transition">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h1 id="night-title" style="margin-top:20%;">Night 1</h1>
+    <p id="night-instruction" class="t-pass">Pass the device to the first player.</p>
+    <button onclick="startNextNightTurn()" style="margin-top:30px;" class="t-continue">Continue</button>
+</div>
+
+<div class="screen" id="screen-night-turn">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2 id="turn-player-name" style="border-bottom:2px solid #fff; padding-bottom:10px; width:80%; text-align:center;">Player</h2>
+    <div id="hidden-role-state" class="fade-element" style="text-align:center; margin-top:20px;">
+        <p class="t-confirm-id">Confirm your identity to unlock night actions.</p>
+        <button onclick="revealRole()" class="t-show-role">Show Secret Role</button>
+    </div>
+    <div id="revealed-role-state" class="fade-element" style="display:none; width:100%; flex-direction:column; align-items:center; overflow-y:auto;">
+        <h3 id="turn-role-name" style="font-size:24px; margin-bottom:5px;">Role</h3>
+        <p id="turn-role-desc" style="font-size:14px; opacity:0.7; text-align:center; max-width:80%; margin-bottom:20px;">Desc</p>
+        <div id="turn-action-ui" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+        <button id="turn-confirm-btn" onclick="finishNightTurn()" style="margin-top:30px;" class="t-complete">Complete Phase</button>
+    </div>
+</div>
+
+<div class="screen" id="screen-morning-transition">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h1 style="margin-top:20%;" class="t-morning-arr">🌅 Morning Arrives</h1>
+    <p class="t-gather">Gather all players together.</p>
+    <button onclick="showMorningRecap()" style="margin-top:30px;" class="t-open-recap">Open Recap</button>
+</div>
+
+<div class="screen" id="screen-morning-recap">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2 class="t-night-log">Night Log Report</h2>
+    <div id="recap-container" class="fade-element" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1;"></div>
+    <button id="morning-next-btn" onclick="handleMorningNext()" class="t-proceed">Proceed</button>
+</div>
+
+<div class="screen" id="screen-discussion">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2 class="t-debate">Strategic Debate</h2>
+    <div class="timer" id="discussion-timer">02:00</div>
+    <button id="timer-toggle-btn" onclick="startTimer()" class="t-start-cd">Start Countdown</button>
+    <button onclick="stopTimer(); checkWardenPhase();" class="t-proc-vote">Proceed</button>
+</div>
+
+<!-- WARDEN SCREEN -->
+<div class="screen" id="screen-warden">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2>Warden Phase</h2>
+    <h3 id="warden-name-display" style="color:var(--warning-color); text-align:center;">Warden</h3>
+    <div id="warden-phase-1" style="width:100%; display:flex; flex-direction:column; align-items:center; flex-grow:1; overflow-y:auto;">
+        <p style="text-align:center;">Select a player to interrogate:</p>
+        <div id="warden-targets" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1; padding-bottom:20px;"></div>
+        <button id="warden-start-btn" onclick="startWardenTimer()" class="fixed-bottom-btn" style="background-color:var(--warning-color); color:#000; border-color:#000;" disabled>Start Interrogation (1:00)</button>
+    </div>
+    <div id="warden-phase-2" style="display:none; width:100%; flex-direction:column; align-items:center;">
+        <p>Interrogating: <span id="warden-target-name" style="color:var(--danger-color); font-weight:bold;"></span></p>
+        <div class="timer" id="warden-timer">01:00</div>
+        <button onclick="endWardenTimerEarly()" style="background-color:var(--danger-color);">End Timer</button>
+    </div>
+    <div id="warden-phase-3" style="display:none; width:100%; flex-direction:column; align-items:center;">
+        <p>Execution Decision for: <span id="warden-target-name-2" style="color:var(--danger-color); font-weight:bold;"></span></p>
+        <button onclick="wardenExecute(true)" style="background-color:var(--danger-color); width:80%;">Execute</button>
+        <button onclick="wardenExecute(false)" style="background-color:var(--success-color); width:80%; margin-top:20px;">Spare</button>
+    </div>
+</div>
+
+<div class="screen" id="screen-voting">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2 class="t-tribunal">Tribunal Phase</h2>
+    <h3 id="voting-player-turn" style="opacity:0.8;">Voter</h3>
+    <div id="voting-targets" style="width:100%; display:flex; flex-direction:column; align-items:center; overflow-y:auto; flex-grow:1;"></div>
+    <div style="width:100%; display:flex; justify-content:center; gap:10px; margin-bottom:15px;">
+        <button id="vote-skip-card" class="action-target" style="width:40%; margin:0; justify-content:center;" onclick="selectVoteTarget('skip', this)">
+            <span class="t-skip">Skip Vote</span>
+        </button>
+        <button id="vote-confirm-btn" style="width:40%; margin:0; background-color:var(--success-color);" onclick="submitConfirmedVote()" disabled class="t-confirm">Confirm</button>
+    </div>
+</div>
+
+<div class="screen" id="screen-voting-results">
+    <div class="header-bar"><button class="back-btn t-quit" onclick="confirmQuit()">Quit Match</button></div>
+    <h2 class="t-judgement">Tribunal Judgement</h2>
+    <div id="voting-result-container" class="fade-element" style="width:100%; display:flex; flex-direction:column; align-items:center; margin:20px 0; flex-grow:1;"></div>
+    <button onclick="nextPhaseCheck()" class="t-continue">Continue</button>
+</div>
+
+<div class="screen" id="screen-game-over">
+    <h1 style="margin-top:20%;" class="t-end">End of Match</h1>
+    <h2 id="win-text" style="font-size:28px; color:var(--success-color); text-align:center;">Victory!</h2>
+    <button onclick="nav('screen-players'); renderPlayers();" class="t-back-assembly">Back to Assembly</button>
+</div>
+
+<!-- External Game Script -->
+<script src="game.js"></script>
+</body>
+</html>

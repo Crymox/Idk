@@ -1,0 +1,20 @@
+{
+  "name": "Midnight Werewolf",
+  "short_name": "Werewolf",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
+  "icons": [
+    {
+      "src": "1.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "2.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
