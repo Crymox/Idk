@@ -219,5 +219,19 @@
 
 <!-- External Game Script -->
 <script src="game.js"></script>
+<!-- Register Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(registration => console.log('SW registered'))
+        .catch(err => console.log('SW registration failed: ', err));
+    });
+  }
+</script>
+<!-- External Game Script -->
+<script src="game.js"></script>
+</body>
+
 </body>
 </html>
